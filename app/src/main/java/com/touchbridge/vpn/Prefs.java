@@ -31,4 +31,7 @@ public final class Prefs {
 
     public void setTapDuration(long v) { sp.edit().putLong("duration", v).apply(); }
     public long tapDuration() { return sp.getLong("duration", 40); }
+
+    public void setCircleSize(int px) { sp.edit().putInt("circleSize", px).apply(); }
+    public int circleSize() { return sp.getInt("circleSize", 90); }
 }
