@@ -42,11 +42,14 @@ public class TouchAccessibilityService extends AccessibilityService {
         }
         hideController();
 
+        int bSize = prefs.circleSize();
+        int aSize = 56;
+
         pointAView = marker("A", Color.rgb(40,150,70), false);
         pointBView = marker("B\nSEGURE", Color.rgb(210,90,35), true);
 
-        add(pointAView, (int)prefs.ax()-28, (int)prefs.ay()-28, false);
-        add(pointBView, (int)prefs.bx()-45, (int)prefs.by()-45, true);
+        add(pointAView, (int)prefs.ax()-aSize/2, (int)prefs.ay()-aSize/2, false, aSize);
+        add(pointBView, (int)prefs.bx()-bSize/2, (int)prefs.by()-bSize/2, true, bSize);
         controllerVisible = true;
 
         Toast.makeText(this, "Ativo: segure B para ligar/desligar pelo ponto A.", Toast.LENGTH_SHORT).show();
@@ -83,12 +86,12 @@ public class TouchAccessibilityService extends AccessibilityService {
         return v;
     }
 
-    private void add(View v, int x, int y, boolean touch) {
+    private void add(View v, int x, int y, boolean touch, int size) {
         int flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
         if (!touch) flags |= WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
 
         WindowManager.LayoutParams p = new WindowManager.LayoutParams(
-            touch ? 90 : 56, touch ? 90 : 56,
+            size, size,
             WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
             flags,
             PixelFormat.TRANSLUCENT);
