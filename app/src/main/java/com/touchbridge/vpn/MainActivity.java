@@ -63,6 +63,38 @@ public class MainActivity extends Activity {
         c.setOnClickListener(v -> choosePoint(false));
         root.addView(c);
 
+        TextView sizeLabel = tv("Tamanho do círculo do PONTO B:", 15);
+        root.addView(sizeLabel);
+
+        LinearLayout sizeRow = new LinearLayout(this);
+        sizeRow.setOrientation(LinearLayout.HORIZONTAL);
+
+        Button pequeno = button("Pequeno");
+        pequeno.setOnClickListener(v -> {
+            prefs.setCircleSize(60);
+            Toast.makeText(this, "Tamanho: Pequeno", Toast.LENGTH_SHORT).show();
+            updateStatus();
+        });
+
+        Button medio = button("Médio");
+        medio.setOnClickListener(v -> {
+            prefs.setCircleSize(90);
+            Toast.makeText(this, "Tamanho: Médio", Toast.LENGTH_SHORT).show();
+            updateStatus();
+        });
+
+        Button grande = button("Grande");
+        grande.setOnClickListener(v -> {
+            prefs.setCircleSize(130);
+            Toast.makeText(this, "Tamanho: Grande", Toast.LENGTH_SHORT).show();
+            updateStatus();
+        });
+
+        sizeRow.addView(pequeno);
+        sizeRow.addView(medio);
+        sizeRow.addView(grande);
+        root.addView(sizeRow);
+
         Button acc = button("⚙ Ativar / configurar Acessibilidade");
         acc.setOnClickListener(v -> startActivity(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)));
         root.addView(acc);
@@ -102,11 +134,18 @@ public class MainActivity extends Activity {
         updateStatus();
     }
 
+    private String sizeName(int px) {
+        if (px <= 60) return "Pequeno";
+        if (px >= 130) return "Grande";
+        return "Médio";
+    }
+
     private void updateStatus() {
         String a = prefs.ax() >= 0 ? String.format("A: %.0f, %.0f", prefs.ax(), prefs.ay()) : "A: não definido";
         String b = prefs.bx() >= 0 ? String.format("B: %.0f, %.0f", prefs.bx(), prefs.by()) : "B: não definido";
         status.setText(a + "\n" + b + "\n\n" +
-                "Acessibilidade: " + (isAccessibilityEnabled() ? "ATIVA" : "DESATIVADA"));
+                "Acessibilidade: " + (isAccessibilityEnabled() ? "ATIVA" : "DESATIVADA") + "\n" +
+                "Tamanho do círculo B: " + sizeName(prefs.circleSize()));
     }
 
     private boolean isAccessibilityEnabled() {
