@@ -23,6 +23,8 @@ public class TouchAccessibilityService extends AccessibilityService {
     private boolean controllerVisible = false;
     private boolean held = false;
 
+    private int bOriginalX, bOriginalY;
+
     public static TouchAccessibilityService getInstance() { return instance; }
 
     @Override public void onServiceConnected() {
@@ -45,14 +47,17 @@ public class TouchAccessibilityService extends AccessibilityService {
         int bSize = prefs.circleSize();
         int aSize = 56;
 
+        bOriginalX = (int)prefs.bx() - bSize/2;
+        bOriginalY = (int)prefs.by() - bSize/2;
+
         pointAView = marker("A", Color.rgb(40,150,70), false);
         pointBView = marker("B\nSEGURE", Color.rgb(210,90,35), true);
 
         add(pointAView, (int)prefs.ax()-aSize/2, (int)prefs.ay()-aSize/2, false, aSize);
-        add(pointBView, (int)prefs.bx()-bSize/2, (int)prefs.by()-bSize/2, true, bSize);
+        add(pointBView, bOriginalX, bOriginalY, true, bSize);
         controllerVisible = true;
 
-        Toast.makeText(this, "Ativo: segure B para ligar/desligar pelo ponto A.", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Ativo: segure e arraste B; solte para clicar A.", Toast.LENGTH_SHORT).show();
     }
 
     private TextView marker(String text, int color, boolean touchable) {
@@ -64,23 +69,46 @@ public class TouchAccessibilityService extends AccessibilityService {
         v.setBackgroundColor(color);
 
         if (touchable) {
-            v.setOnTouchListener((view, e) -> {
-                if (e.getAction() == MotionEvent.ACTION_DOWN) {
-                    if (!held) {
-                        held = true;
-                        tapA();
+            v.setOnTouchListener(new View.OnTouchListener() {
+                float sx, sy;
+                int ox, oy;
+
+                @Override public boolean onTouch(View view, MotionEvent e) {
+                    switch (e.getAction()) {
+                        case MotionEvent.ACTION_DOWN: {
+                            sx = e.getRawX();
+                            sy = e.getRawY();
+                            WindowManager.LayoutParams p = (WindowManager.LayoutParams) view.getLayoutParams();
+                            ox = p.x;
+                            oy = p.y;
+                            if (!held) {
+                                held = true;
+                                tapA();
+                            }
+                            return true;
+                        }
+                        case MotionEvent.ACTION_MOVE: {
+                            WindowManager.LayoutParams p = (WindowManager.LayoutParams) view.getLayoutParams();
+                            p.x = ox + (int)(e.getRawX() - sx);
+                            p.y = oy + (int)(e.getRawY() - sy);
+                            try { wm.updateViewLayout(view, p); } catch (Exception ignored) {}
+                            return true;
+                        }
+                        case MotionEvent.ACTION_UP:
+                        case MotionEvent.ACTION_CANCEL: {
+                            if (held) {
+                                held = false;
+                                tapA();
+                            }
+                            WindowManager.LayoutParams p = (WindowManager.LayoutParams) view.getLayoutParams();
+                            p.x = bOriginalX;
+                            p.y = bOriginalY;
+                            try { wm.updateViewLayout(view, p); } catch (Exception ignored) {}
+                            return true;
+                        }
                     }
                     return true;
                 }
-                if (e.getAction() == MotionEvent.ACTION_UP ||
-                    e.getAction() == MotionEvent.ACTION_CANCEL) {
-                    if (held) {
-                        held = false;
-                        tapA();
-                    }
-                    return true;
-                }
-                return true;
             });
         }
         return v;
